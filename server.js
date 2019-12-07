@@ -52,6 +52,10 @@ app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname + "/modal.html"));
   //__dirname : It will resolve to your project folder.
 });
+app.get("/login", (req, res) => {
+  res.sendFile(path.join(__dirname + "/login.html"));
+  //__dirname : It will resolve to your project folder.
+});
 
 app.post("/register", (req, res) => {
   const { password, email, username } = req.body;
@@ -62,19 +66,33 @@ app.post("/register", (req, res) => {
     if (error) {
       res.send("Data could not be updated." + error);
     } else {
-      res.send(`${email} succesfully registered`);
+      res.sendFile(path.join(__dirname + "/login.html"));
     }
   });
 });
 
-app.get("/users", (req, res) => {
-  var userReference = firebase.database().ref("/Users/");
+app.post("/login", (req, res) => {
+  const { password, username } = req.body;
+
+  var userReference = firebase.database().ref("/Users/" + username + "/");
 
   userReference.on(
     "value",
     function(snapshot) {
       res.json(snapshot.val());
       userReference.off("value");
+      if (snapshot.val()) {
+        const { passwordF } = snapshot.val();
+        if (passwordF === password) {
+          console.log(";asd");
+          return res.send("Succesfully login as " + username);
+        } else {
+          return res.send("Password Incorrect");
+        }
+      } else {
+        console.log(";asd2");
+        return res.send("user not registered");
+      }
     },
     function(errorObject) {
       res.send("The read failed: " + errorObject.code);
